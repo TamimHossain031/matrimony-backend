@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Enums\AccountStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Profile\StoreProfileRequest;
 use App\Http\Requests\Profile\UpdateProfileRequest;
 use App\Http\Resources\ProfileResource;
 use App\Models\Profile;
@@ -31,9 +32,9 @@ class ProfileController extends Controller
         return response()->json(['data' => new ProfileResource($profile)]);
     }
 
-    public function store(UpdateProfileRequest $request): JsonResponse
+    public function store(StoreProfileRequest $request): JsonResponse
     {
-        if ($request->user()->profile) {
+        if ($request->user()->profile()->exists()) {
             throw ValidationException::withMessages(['profile' => ['You already have a profile.']]);
         }
 

@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\ManagerRelationship;
+use App\Exceptions\DomainException;
 use App\Models\Profile;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -24,12 +25,31 @@ class ProfileService
      */
     public function createForUser(User $user, array $data): Profile
     {
-        return DB::transaction(function () use ($user, $data) {
+        $fullNameEn = ! blank($data['full_name_en'] ?? null)
+            ? $data['full_name_en']
+            : $user->name;
+
+        if (blank($fullNameEn)) {
+            throw new DomainException('Full name (English) is required to create a profile.');
+        }
+
+        $gender = $data['gender'] ?? $user->gender?->value;
+        if (blank($gender)) {
+            throw new DomainException('Gender is required to create a profile.');
+        }
+
+        $dateOfBirth = $data['date_of_birth'] ?? $user->date_of_birth;
+        if (blank($dateOfBirth)) {
+            throw new DomainException('Date of birth is required to create a profile.');
+        }
+
+        return DB::transaction(function () use ($user, $data, $fullNameEn, $gender, $dateOfBirth) {
             $profile = Profile::create(array_merge($data, [
                 'user_id' => $user->id,
                 'public_id' => $this->generatePublicId(),
-                'gender' => $data['gender'] ?? $user->gender?->value,
-                'date_of_birth' => $data['date_of_birth'] ?? $user->date_of_birth,
+                'full_name_en' => $fullNameEn,
+                'gender' => $gender,
+                'date_of_birth' => $dateOfBirth,
             ]));
 
             // Every profile has exactly one `self` manager (the candidate), unless

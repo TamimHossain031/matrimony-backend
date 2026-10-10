@@ -4,7 +4,9 @@ namespace App\Http\Requests\Auth;
 
 use App\Enums\Gender;
 use App\Enums\ProfileCreatedBy;
+use App\Models\User;
 use App\Support\Phone;
+use Carbon\Carbon;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
@@ -49,7 +51,7 @@ class RegisterRequest extends FormRequest
             $e164 = $this->input('phone_e164');
             if ($e164 === null) {
                 $validator->errors()->add('phone', 'Enter a valid Bangladeshi mobile number.');
-            } elseif (\App\Models\User::where('phone_e164', $e164)->exists()) {
+            } elseif (User::where('phone_e164', $e164)->exists()) {
                 $validator->errors()->add('phone', 'An account with this phone number already exists.');
             }
 
@@ -57,7 +59,7 @@ class RegisterRequest extends FormRequest
             $gender = Gender::tryFrom((string) $this->input('gender'));
             $dob = $this->input('date_of_birth');
             if ($gender && $dob) {
-                $age = \Carbon\Carbon::parse($dob)->age;
+                $age = Carbon::parse($dob)->age;
                 $min = $gender->minMarriageAge();
                 if ($age < $min) {
                     $label = $gender === Gender::Female ? 'women' : 'men';

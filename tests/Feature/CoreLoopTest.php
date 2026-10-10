@@ -2,7 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Enums\AccountStatus;
+use App\Models\Conversation;
 use App\Models\Interest;
+use App\Models\Message;
 use App\Models\Profile;
 use App\Models\User;
 use App\Services\ContactBlockService;
@@ -112,7 +115,7 @@ class CoreLoopTest extends TestCase
         Sanctum::actingAs($man);
         $this->patchJson("/api/v1/interests/{$interest->id}", ['action' => 'accept'])->assertOk();
 
-        $conversation = \App\Models\Conversation::first();
+        $conversation = Conversation::first();
 
         // A message with a phone number gets masked before it persists.
         Sanctum::actingAs($woman);
@@ -120,7 +123,7 @@ class CoreLoopTest extends TestCase
             'body' => 'Call me on 01712345678 please',
         ])->assertCreated()->assertJsonPath('data.was_masked', true);
 
-        $this->assertStringNotContainsString('01712345678', \App\Models\Message::first()->body);
+        $this->assertStringNotContainsString('01712345678', Message::first()->body);
     }
 
     public function test_relative_blocklist_excludes_a_profile_both_ways(): void
@@ -148,7 +151,7 @@ class CoreLoopTest extends TestCase
         [$man, $manProfile] = $this->makeUserWithProfile('male');
 
         // The man hides his account.
-        $man->update(['status' => \App\Enums\AccountStatus::Hidden]);
+        $man->update(['status' => AccountStatus::Hidden]);
 
         Sanctum::actingAs($woman);
         $this->getJson("/api/v1/profiles/{$manProfile->public_id}")->assertNotFound();

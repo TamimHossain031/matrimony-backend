@@ -1,6 +1,9 @@
 <?php
 
 use App\Exceptions\DomainException;
+use App\Http\Middleware\EnsureAccountActive;
+use App\Http\Middleware\EnsureStaff;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -24,8 +27,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->throttleApi();
 
         $middleware->alias([
-            'active' => \App\Http\Middleware\EnsureAccountActive::class,
-            'staff' => \App\Http\Middleware\EnsureStaff::class,
+            'active' => EnsureAccountActive::class,
+            'staff' => EnsureStaff::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
@@ -39,6 +42,25 @@ return Application::configure(basePath: dirname(__DIR__))
                 return response()->json([
                     'message' => $e->getMessage(),
                 ], $e->status);
+            }
+
+            return null;
+        });
+
+        // Translate database constraint / missing default value issues into structured errors
+        $exceptions->render(function (QueryException $e, Request $request) {
+            if ($request->is('api/*') || $request->expectsJson()) {
+                if (str_contains($e->getMessage(), "doesn't have a default value")) {
+                    preg_match("/Field '([^']+)' doesn't have a default value/", $e->getMessage(), $matches);
+                    $field = $matches[1] ?? 'field';
+
+                    return response()->json([
+                        'message' => "The {$field} field is required.",
+                        'errors' => [
+                            $field => ["The {$field} field is required."],
+                        ],
+                    ], 422);
+                }
             }
 
             return null;

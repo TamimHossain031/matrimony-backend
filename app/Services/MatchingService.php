@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\Importance;
+use App\Models\EducationLevel;
 use App\Models\PartnerPreference;
 use App\Models\Profile;
 
@@ -172,8 +173,8 @@ class MatchingService
             return null;
         }
         // Compare by the lookup `rank` so "at least bachelor" works.
-        $minRank = optional($pref->minEducationLevel ?? \App\Models\EducationLevel::find($pref->min_education_level_id))->rank;
-        $candRank = optional($c->educationLevel ?? \App\Models\EducationLevel::find($c->education_level_id))->rank;
+        $minRank = optional($pref->minEducationLevel ?? EducationLevel::find($pref->min_education_level_id))->rank;
+        $candRank = optional($c->educationLevel ?? EducationLevel::find($c->education_level_id))->rank;
         $met = $minRank !== null && $candRank !== null && $candRank >= $minRank;
 
         return [

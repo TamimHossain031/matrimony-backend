@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Enums\AccountStatus;
 use App\Enums\Gender;
 use App\Models\Profile;
 use App\Models\User;

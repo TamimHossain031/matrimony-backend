@@ -22,7 +22,6 @@ use App\Models\Message;
 use App\Models\Notification;
 use App\Models\PartnerPreference;
 use App\Models\PreferenceWeight;
-use App\Models\PrivacySetting;
 use App\Models\Profession;
 use App\Models\Profile;
 use App\Models\ProfilePhoto;
