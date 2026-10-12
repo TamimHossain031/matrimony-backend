@@ -32,10 +32,23 @@ class ProfileCardResource extends JsonResource
             'has_photo' => (bool) $this->has_photo,
             'primary_photo' => $this->when(
                 $this->relationLoaded('photos'),
-                fn () => optional($this->photos->firstWhere('is_primary', true))->only(['id', 'visibility', 'moderation_status']),
+                fn () => $this->primaryPhoto(),
             ),
             'match' => $this->when(isset($this->match), fn () => $this->match),
         ];
+    }
+
+    private function primaryPhoto(): ?ProfilePhotoResource
+    {
+        $photo = $this->photos->firstWhere('is_primary', true);
+
+        if ($photo === null) {
+            return null;
+        }
+
+        $photo->setRelation('profile', $this->resource);
+
+        return new ProfilePhotoResource($photo);
     }
 
     /**

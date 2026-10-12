@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Api\V1;
 use App\Enums\PhotoModerationStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ProfilePhotoResource;
+use App\Jobs\GenerateBlurredPhoto;
 use App\Models\ProfilePhoto;
+use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -56,6 +58,8 @@ class PhotoController extends Controller
             'height' => $height,
         ]);
 
+        GenerateBlurredPhoto::dispatch($photo);
+
         $profile->forceFill(['has_photo' => true])->saveQuietly();
 
         return response()->json(['data' => new ProfilePhotoResource($photo)], 201);
@@ -75,7 +79,7 @@ class PhotoController extends Controller
     {
         $this->assertOwnsPhoto($request, $photo);
 
-        Storage::disk($photo->disk)->delete($photo->path);
+        Storage::disk($photo->disk)->delete(array_filter([$photo->path, $photo->blurred_path]));
         $photo->delete();
 
         $profile = $photo->profile;
@@ -93,9 +97,32 @@ class PhotoController extends Controller
      */
     public function show(ProfilePhoto $photo): StreamedResponse
     {
-        abort_unless(Storage::disk($photo->disk)->exists($photo->path), 404);
+        return $this->streamFromDisk($photo->disk, $photo->path);
+    }
 
-        return Storage::disk($photo->disk)->response($photo->path);
+    /**
+     * Serve the server-generated blurred copy. Safe for any member, so it is
+     * the only image shown to viewers without access to the original.
+     */
+    public function showBlurred(ProfilePhoto $photo): StreamedResponse
+    {
+        abort_unless($photo->blurred_path, 404);
+
+        return $this->streamFromDisk($photo->disk, $photo->blurred_path);
+    }
+
+    private function streamFromDisk(string $diskName, string $path): StreamedResponse
+    {
+        /** @var FilesystemAdapter $disk */
+        $disk = Storage::disk($diskName);
+        abort_unless($disk->exists($path), 404);
+
+        $mimeType = $disk->mimeType($path);
+        $file = $disk->get($path);
+
+        return response()->streamDownload(function () use ($file) {
+            echo $file;
+        }, basename($path), ['Content-Type' => $mimeType]);
     }
 
     private function ownProfile(Request $request)

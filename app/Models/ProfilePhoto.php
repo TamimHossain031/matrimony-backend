@@ -13,7 +13,7 @@ class ProfilePhoto extends Model
     use SoftDeletes;
 
     protected $fillable = [
-        'profile_id', 'disk', 'path', 'is_primary', 'position',
+        'profile_id', 'disk', 'path', 'blurred_path', 'is_primary', 'position',
         'visibility', 'moderation_status', 'width', 'height',
     ];
 
@@ -26,7 +26,7 @@ class ProfilePhoto extends Model
         ];
     }
 
-    protected $hidden = ['path', 'disk'];
+    protected $hidden = ['path', 'blurred_path', 'disk'];
 
     public function profile(): BelongsTo
     {

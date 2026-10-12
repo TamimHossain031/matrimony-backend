@@ -10,7 +10,7 @@ use Illuminate\Database\Seeder;
 
 /**
  * Seeds the mandatory lookup tables (blueprint §13, §19): the Bangladeshi
- * division → district taxonomy, religions, professions, education levels.
+ * division → district → upazila taxonomy, religions, professions, education levels.
  */
 class LookupSeeder extends Seeder
 {
@@ -44,6 +44,18 @@ class LookupSeeder extends Seeder
             foreach ($districts as $district) {
                 Location::firstOrCreate(
                     ['type' => 'district', 'name_en' => $district, 'parent_id' => $div->id],
+                );
+            }
+        }
+
+        foreach (UpazilaData::all() as $districtName => $upazilas) {
+            $district = Location::where('type', 'district')->where('name_en', $districtName)->first();
+            if (! $district) {
+                continue;
+            }
+            foreach ($upazilas as $upazila) {
+                Location::firstOrCreate(
+                    ['type' => 'upazila', 'name_en' => $upazila, 'parent_id' => $district->id],
                 );
             }
         }

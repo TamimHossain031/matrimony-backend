@@ -50,6 +50,8 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
     // Signed, expiring photo delivery (§12). No auth — the signature is the auth.
     Route::get('photos/{photo}', [PhotoController::class, 'show'])
         ->middleware('signed')->name('photos.show');
+    Route::get('photos/{photo}/blurred', [PhotoController::class, 'showBlurred'])
+        ->middleware('signed')->name('photos.blurred');
 
     // ---- Authenticated ---------------------------------------------------
     Route::middleware(['auth:sanctum', 'active'])->group(function () {
