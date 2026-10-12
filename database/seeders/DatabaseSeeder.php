@@ -27,6 +27,7 @@ class DatabaseSeeder extends Seeder
             dob: '1985-01-01',
         );
 
+        $this->call(GreetingTemplateSeeder::class);
         $this->call(BangladeshUserSeeder::class);
     }
 

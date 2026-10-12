@@ -2,10 +2,14 @@
 
 namespace App\Http\Resources;
 
+use App\Enums\PhotoModerationStatus;
+use App\Enums\PhotoRequestStatus;
 use App\Enums\Visibility;
+use App\Models\PhotoRequest;
 use App\Services\PrivacyResolver;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\URL;
 
 /**
  * Full profile detail. Sensitive fields are gated through PrivacyResolver using
@@ -86,14 +90,15 @@ class ProfileResource extends JsonResource
                 if (! $primaryPhoto) {
                     return null;
                 }
-                $canSee = $isOwner || ($primaryPhoto->moderation_status === \App\Enums\PhotoModerationStatus::Approved && (
-                    \App\Models\PhotoRequest::where('profile_id', $this->id)
+                $canSee = $isOwner || ($primaryPhoto->moderation_status === PhotoModerationStatus::Approved && (
+                    PhotoRequest::where('profile_id', $this->id)
                         ->where('requester_id', $viewer?->id)
-                        ->where('status', \App\Enums\PhotoRequestStatus::Approved->value)
+                        ->where('status', PhotoRequestStatus::Approved->value)
                         ->exists()
                     || $resolver->canSee($viewer, $this->resource, $primaryPhoto->visibility)
                 ));
-                return $canSee ? \Illuminate\Support\Facades\URL::temporarySignedRoute('api.v1.photos.show', now()->addHours(24), ['photo' => $primaryPhoto->id]) : null;
+
+                return $canSee ? URL::temporarySignedRoute('api.v1.photos.show', now()->addHours(24), ['photo' => $primaryPhoto->id]) : null;
             }),
         ];
     }

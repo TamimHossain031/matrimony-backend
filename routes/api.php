@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\Admin\AdminAuditLogApiController;
 use App\Http\Controllers\Api\V1\Admin\AdminDashboardApiController;
+use App\Http\Controllers\Api\V1\Admin\AdminGreetingCardApiController;
 use App\Http\Controllers\Api\V1\Admin\AdminPhotoApiController;
 use App\Http\Controllers\Api\V1\Admin\AdminReportApiController;
 use App\Http\Controllers\Api\V1\Admin\AdminUserApiController;
@@ -12,6 +13,8 @@ use App\Http\Controllers\Api\V1\ContactBlockController;
 use App\Http\Controllers\Api\V1\ConversationController;
 use App\Http\Controllers\Api\V1\DashboardController;
 use App\Http\Controllers\Api\V1\DiscoveryController;
+use App\Http\Controllers\Api\V1\GreetingCardController;
+use App\Http\Controllers\Api\V1\GreetingTemplateController;
 use App\Http\Controllers\Api\V1\InterestController;
 use App\Http\Controllers\Api\V1\LookupController;
 use App\Http\Controllers\Api\V1\NotificationController;
@@ -59,6 +62,22 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         ->middleware('signed')->name('photos.show');
     Route::get('photos/{photo}/blurred', [PhotoController::class, 'showBlurred'])
         ->middleware('signed')->name('photos.blurred');
+
+    // Greeting Cards & Templates (Public / Link-based sharing, no auth required)
+    Route::get('greeting-templates', [GreetingTemplateController::class, 'index'])->name('greeting-templates.index');
+    Route::get('greeting-templates/{slug}', [GreetingTemplateController::class, 'show'])->name('greeting-templates.show');
+    Route::post('greeting-cards', [GreetingCardController::class, 'store'])
+        ->middleware('throttle:30,1')->name('greeting-cards.store');
+    Route::get('public/greeting-cards/{public_id}', [GreetingCardController::class, 'showPublic'])
+        ->name('public.greeting-cards.show');
+    Route::post('public/greeting-cards/{public_id}/events', [GreetingCardController::class, 'recordEvent'])
+        ->middleware('throttle:60,1')->name('public.greeting-cards.events');
+    Route::post('public/greeting-cards/{public_id}/report', [GreetingCardController::class, 'report'])
+        ->middleware('throttle:10,1')->name('public.greeting-cards.report');
+    Route::patch('greeting-cards/{public_id}', [GreetingCardController::class, 'update'])
+        ->middleware('throttle:30,1')->name('greeting-cards.update');
+    Route::delete('greeting-cards/{public_id}', [GreetingCardController::class, 'destroy'])
+        ->middleware('throttle:30,1')->name('greeting-cards.destroy');
 
     // ---- Authenticated ---------------------------------------------------
     Route::middleware(['auth:sanctum', 'active'])->group(function () {
@@ -155,6 +174,12 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::patch('photos/{photo}/moderation', [AdminPhotoApiController::class, 'updateModeration'])->name('photos.moderation');
             Route::post('photos/batch', [AdminPhotoApiController::class, 'batchAction'])->name('photos.batch');
             Route::delete('photos/{photo}', [AdminPhotoApiController::class, 'destroy'])->name('photos.destroy');
+
+            // Greeting cards moderation
+            Route::get('greeting-cards', [AdminGreetingCardApiController::class, 'index'])->name('greeting-cards.index');
+            Route::patch('greeting-cards/{card}/status', [AdminGreetingCardApiController::class, 'updateStatus'])->name('greeting-cards.status');
+            Route::get('greeting-reports', [AdminGreetingCardApiController::class, 'reports'])->name('greeting-reports.index');
+            Route::patch('greeting-reports/{report}', [AdminGreetingCardApiController::class, 'updateReportStatus'])->name('greeting-reports.update');
 
             Route::get('audit-logs', [AdminAuditLogApiController::class, 'index'])->name('audit-logs.index');
         });
