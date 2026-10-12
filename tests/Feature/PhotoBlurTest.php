@@ -117,4 +117,31 @@ class PhotoBlurTest extends TestCase
 
         Storage::disk('local')->assertMissing([$photo->path, $photo->blurred_path]);
     }
+
+    public function test_owner_can_update_photo_visibility(): void
+    {
+        $owner = User::factory()->create();
+        $this->profileFor($owner);
+        $photo = $this->uploadAs($owner);
+
+        Sanctum::actingAs($owner);
+        $res = $this->patchJson("/api/v1/photos/{$photo->id}", [
+            'visibility' => 'private',
+        ])->assertOk();
+
+        $this->assertEquals('private', $res->json('data.visibility'));
+        $this->assertEquals('private', $photo->fresh()->visibility->value);
+    }
+
+    public function test_auth_me_includes_avatar_url(): void
+    {
+        $owner = User::factory()->create();
+        $this->profileFor($owner);
+        $this->uploadAs($owner);
+
+        Sanctum::actingAs($owner);
+        $res = $this->getJson('/api/v1/auth/me')->assertOk();
+
+        $this->assertNotNull($res->json('data.avatar_url'));
+    }
 }

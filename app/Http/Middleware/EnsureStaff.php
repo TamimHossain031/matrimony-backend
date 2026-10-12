@@ -16,7 +16,11 @@ class EnsureStaff
         $user = $request->user();
 
         if (! $user || ! $user->isStaff()) {
-            return response()->json(['message' => 'This action is unauthorized.'], 403);
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json(['message' => 'This action is unauthorized.'], 403);
+            }
+
+            abort(403, 'This action is unauthorized.');
         }
 
         return $next($request);

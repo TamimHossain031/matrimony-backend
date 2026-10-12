@@ -106,6 +106,26 @@ class User extends Authenticatable
         return $this->hasMany(Block::class, 'blocker_id');
     }
 
+    public function verifications(): HasMany
+    {
+        return $this->hasMany(Verification::class);
+    }
+
+    public function reportsSubmitted(): HasMany
+    {
+        return $this->hasMany(Report::class, 'reporter_id');
+    }
+
+    public function reportsAgainst(): HasMany
+    {
+        return $this->hasMany(Report::class, 'reported_user_id');
+    }
+
+    public function auditLogs(): HasMany
+    {
+        return $this->hasMany(AuditLog::class, 'actor_id');
+    }
+
     // ---- Helpers -----------------------------------------------------------
 
     public function isAdmin(): bool

@@ -65,6 +65,27 @@ class PhotoController extends Controller
         return response()->json(['data' => new ProfilePhotoResource($photo)], 201);
     }
 
+    public function update(Request $request, ProfilePhoto $photo): JsonResponse
+    {
+        $this->assertOwnsPhoto($request, $photo);
+
+        $validated = $request->validate([
+            'visibility' => ['sometimes', 'in:public,members_only,accepted_connection,private'],
+            'is_primary' => ['sometimes', 'boolean'],
+        ]);
+
+        if (! empty($validated['is_primary'])) {
+            $photo->profile->photos()->update(['is_primary' => false]);
+        }
+
+        $photo->update($validated);
+
+        return response()->json([
+            'message' => 'Photo updated successfully.',
+            'data' => new ProfilePhotoResource($photo),
+        ]);
+    }
+
     public function setPrimary(Request $request, ProfilePhoto $photo): JsonResponse
     {
         $this->assertOwnsPhoto($request, $photo);
@@ -117,12 +138,22 @@ class PhotoController extends Controller
         $disk = Storage::disk($diskName);
         abort_unless($disk->exists($path), 404);
 
-        $mimeType = $disk->mimeType($path);
-        $file = $disk->get($path);
+        $mimeType = $disk->mimeType($path) ?: 'image/jpeg';
+        $filename = basename($path);
 
-        return response()->streamDownload(function () use ($file) {
-            echo $file;
-        }, basename($path), ['Content-Type' => $mimeType]);
+        return response()->stream(function () use ($disk, $path) {
+            $stream = $disk->readStream($path);
+            if ($stream) {
+                fpassthru($stream);
+                if (is_resource($stream)) {
+                    fclose($stream);
+                }
+            }
+        }, 200, [
+            'Content-Type' => $mimeType,
+            'Content-Disposition' => 'inline; filename="'.$filename.'"',
+            'Cache-Control' => 'private, max-age=3600',
+        ]);
     }
 
     private function ownProfile(Request $request)

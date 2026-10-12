@@ -73,12 +73,18 @@ class AuthController extends Controller
             ]);
         }
 
+        if ($user->status === AccountStatus::Suspended) {
+            throw ValidationException::withMessages([
+                'login' => ['This account has been suspended.'],
+            ]);
+        }
+
         $user->forceFill(['last_active_at' => now()])->save();
 
         $token = $user->createToken($request->input('device_name', 'api'))->plainTextToken;
 
         return response()->json([
-            'user' => new UserResource($user),
+            'user' => new UserResource($user->load('profile.photos')),
             'token' => $token,
         ]);
     }
@@ -92,7 +98,7 @@ class AuthController extends Controller
 
     public function me(Request $request): UserResource
     {
-        return new UserResource($request->user()->load('profile'));
+        return new UserResource($request->user()->load('profile.photos'));
     }
 
     public function changePassword(Request $request): JsonResponse

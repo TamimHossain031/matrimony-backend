@@ -1,5 +1,11 @@
 <?php
 
+use App\Http\Controllers\Api\V1\Admin\AdminAuditLogApiController;
+use App\Http\Controllers\Api\V1\Admin\AdminDashboardApiController;
+use App\Http\Controllers\Api\V1\Admin\AdminPhotoApiController;
+use App\Http\Controllers\Api\V1\Admin\AdminReportApiController;
+use App\Http\Controllers\Api\V1\Admin\AdminUserApiController;
+use App\Http\Controllers\Api\V1\Admin\AdminVerificationApiController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\BlockController;
 use App\Http\Controllers\Api\V1\ContactBlockController;
@@ -15,6 +21,7 @@ use App\Http\Controllers\Api\V1\PreferenceController;
 use App\Http\Controllers\Api\V1\ProfileController;
 use App\Http\Controllers\Api\V1\ReportController;
 use App\Http\Controllers\Api\V1\ShortlistController;
+use App\Http\Controllers\Api\V1\VerificationController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -91,6 +98,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         // Photos
         Route::get('photos', [PhotoController::class, 'index'])->name('photos.index');
         Route::post('photos', [PhotoController::class, 'store'])->name('photos.store');
+        Route::patch('photos/{photo}', [PhotoController::class, 'update'])->name('photos.update');
         Route::patch('photos/{photo}/primary', [PhotoController::class, 'setPrimary'])->name('photos.primary');
         Route::delete('photos/{photo}', [PhotoController::class, 'destroy'])->name('photos.destroy');
 
@@ -119,5 +127,36 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::post('blocks', [BlockController::class, 'store'])->name('blocks.store');
         Route::delete('blocks/{publicId}', [BlockController::class, 'destroy'])->name('blocks.destroy');
         Route::post('reports', [ReportController::class, 'store'])->name('reports.store');
+
+        // Verification requests (blueprint §15)
+        Route::get('verifications', [VerificationController::class, 'index'])->name('verifications.index');
+        Route::post('verifications', [VerificationController::class, 'store'])->name('verifications.store');
+
+        // Staff / Admin API routes (§16, §18)
+        Route::middleware('staff')->prefix('admin')->name('admin.')->group(function () {
+            Route::get('dashboard', [AdminDashboardApiController::class, 'index'])->name('dashboard');
+
+            Route::get('users', [AdminUserApiController::class, 'index'])->name('users.index');
+            Route::get('users/{user}', [AdminUserApiController::class, 'show'])->name('users.show');
+            Route::patch('users/{user}/status', [AdminUserApiController::class, 'updateStatus'])->name('users.status');
+            Route::patch('users/{user}/role', [AdminUserApiController::class, 'updateRole'])->name('users.role');
+            Route::patch('users/{user}/verification-level', [AdminUserApiController::class, 'updateVerificationLevel'])->name('users.verification-level');
+            Route::delete('users/{user}', [AdminUserApiController::class, 'destroy'])->name('users.destroy');
+
+            Route::get('reports', [AdminReportApiController::class, 'index'])->name('reports.index');
+            Route::get('reports/{report}', [AdminReportApiController::class, 'show'])->name('reports.show');
+            Route::patch('reports/{report}', [AdminReportApiController::class, 'updateStatus'])->name('reports.update');
+
+            Route::get('verifications', [AdminVerificationApiController::class, 'index'])->name('verifications.index');
+            Route::get('verifications/{verification}', [AdminVerificationApiController::class, 'show'])->name('verifications.show');
+            Route::patch('verifications/{verification}', [AdminVerificationApiController::class, 'updateStatus'])->name('verifications.update');
+
+            Route::get('photos', [AdminPhotoApiController::class, 'index'])->name('photos.index');
+            Route::patch('photos/{photo}/moderation', [AdminPhotoApiController::class, 'updateModeration'])->name('photos.moderation');
+            Route::post('photos/batch', [AdminPhotoApiController::class, 'batchAction'])->name('photos.batch');
+            Route::delete('photos/{photo}', [AdminPhotoApiController::class, 'destroy'])->name('photos.destroy');
+
+            Route::get('audit-logs', [AdminAuditLogApiController::class, 'index'])->name('audit-logs.index');
+        });
     });
 });

@@ -17,8 +17,12 @@ class EnsureAccountActive
     {
         $user = $request->user();
 
-        if ($user && $user->status === AccountStatus::Deleted) {
-            return response()->json(['message' => 'This account has been deleted.'], 403);
+        if ($user && ($user->status === AccountStatus::Deleted || $user->status === AccountStatus::Suspended)) {
+            $msg = $user->status === AccountStatus::Suspended
+                ? 'This account has been suspended.'
+                : 'This account has been deleted.';
+
+            return response()->json(['message' => $msg], 403);
         }
 
         return $next($request);

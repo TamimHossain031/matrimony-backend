@@ -25,4 +25,25 @@ class AuditLog extends Model
     {
         return $this->belongsTo(User::class, 'actor_id');
     }
+
+    /**
+     * Convenience helper to record a staff audit log entry.
+     */
+    public static function record(
+        ?User $actor,
+        string $action,
+        ?Model $subject = null,
+        array $context = [],
+        ?string $ipAddress = null
+    ): self {
+        return self::create([
+            'actor_id' => $actor?->id,
+            'action' => $action,
+            'subject_type' => $subject ? get_class($subject) : null,
+            'subject_id' => $subject?->getKey(),
+            'context' => $context,
+            'ip_address' => $ipAddress ?? request()->ip(),
+            'created_at' => now(),
+        ]);
+    }
 }

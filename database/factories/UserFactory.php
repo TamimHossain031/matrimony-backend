@@ -62,6 +62,16 @@ class UserFactory extends Factory
         return $this->state(fn () => ['role' => UserRole::Admin]);
     }
 
+    public function moderator(): static
+    {
+        return $this->state(fn () => ['role' => UserRole::Moderator]);
+    }
+
+    public function suspended(): static
+    {
+        return $this->state(fn () => ['status' => AccountStatus::Suspended]);
+    }
+
     public function unverified(): static
     {
         return $this->state(fn () => ['email_verified_at' => null]);

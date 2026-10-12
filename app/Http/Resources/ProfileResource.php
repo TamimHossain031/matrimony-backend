@@ -81,6 +81,20 @@ class ProfileResource extends JsonResource
             ], fn ($v) => $v !== null)),
 
             'photos' => ProfilePhotoResource::collection($this->whenLoaded('photos')),
+            'avatar_url' => $this->whenLoaded('photos', function () use ($isOwner, $viewer, $resolver) {
+                $primaryPhoto = $this->photos->firstWhere('is_primary', true) ?? $this->photos->first();
+                if (! $primaryPhoto) {
+                    return null;
+                }
+                $canSee = $isOwner || ($primaryPhoto->moderation_status === \App\Enums\PhotoModerationStatus::Approved && (
+                    \App\Models\PhotoRequest::where('profile_id', $this->id)
+                        ->where('requester_id', $viewer?->id)
+                        ->where('status', \App\Enums\PhotoRequestStatus::Approved->value)
+                        ->exists()
+                    || $resolver->canSee($viewer, $this->resource, $primaryPhoto->visibility)
+                ));
+                return $canSee ? \Illuminate\Support\Facades\URL::temporarySignedRoute('api.v1.photos.show', now()->addHours(24), ['photo' => $primaryPhoto->id]) : null;
+            }),
         ];
     }
 

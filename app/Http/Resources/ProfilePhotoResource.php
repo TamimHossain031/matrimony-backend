@@ -28,6 +28,7 @@ class ProfilePhotoResource extends JsonResource
             'id' => $this->id,
             'is_primary' => $this->is_primary,
             'position' => $this->position,
+            'visibility' => $this->visibility?->value,
             'moderation_status' => $this->moderation_status?->value,
             'blurred' => ! $canSee,
             // Always safe to show: a server-generated blur, null until the queued job has produced it.

@@ -29,7 +29,7 @@ class Profile extends Model
         'education_level_id', 'institution', 'subject', 'graduation_year',
         'profession_id', 'job_title', 'organization', 'income_min', 'income_max', 'work_location',
         'father_occupation', 'mother_occupation', 'siblings_count', 'family_type',
-        'family_location', 'family_description', 'lifestyle',
+        'family_location', 'family_description', 'lifestyle', 'verification_level', 'has_photo',
     ];
 
     protected function casts(): array
