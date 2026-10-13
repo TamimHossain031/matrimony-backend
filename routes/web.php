@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AdminAuditLogController;
 use App\Http\Controllers\Admin\AdminAuthController;
 use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\AdminGreetingTemplateController;
 use App\Http\Controllers\Admin\AdminPhotoModerationController;
 use App\Http\Controllers\Admin\AdminProfileController;
 use App\Http\Controllers\Admin\AdminReportController;
@@ -61,6 +62,20 @@ Route::middleware(['auth', 'staff'])->prefix('admin')->name('admin.')->group(fun
     Route::post('photos/batch', [AdminPhotoModerationController::class, 'batchAction'])->name('photos.batch');
     Route::get('photos/{photo}/preview', [AdminPhotoModerationController::class, 'preview'])->name('photos.preview');
     Route::get('photos/{photo}/preview-blurred', [AdminPhotoModerationController::class, 'previewBlurred'])->name('photos.preview-blurred');
+
+    // Greeting Cards & Templates Management
+    Route::get('greeting-templates', [AdminGreetingTemplateController::class, 'index'])->name('greeting-templates.index');
+    Route::get('greeting-templates/create', [AdminGreetingTemplateController::class, 'create'])->name('greeting-templates.create');
+    Route::post('greeting-templates', [AdminGreetingTemplateController::class, 'store'])->name('greeting-templates.store');
+    Route::get('greeting-templates/{template}/edit', [AdminGreetingTemplateController::class, 'edit'])->name('greeting-templates.edit');
+    Route::put('greeting-templates/{template}', [AdminGreetingTemplateController::class, 'update'])->name('greeting-templates.update');
+    Route::delete('greeting-templates/{template}', [AdminGreetingTemplateController::class, 'destroy'])->name('greeting-templates.destroy');
+    Route::post('greeting-templates/{template}/toggle-active', [AdminGreetingTemplateController::class, 'toggleActive'])->name('greeting-templates.toggle-active');
+    Route::post('greeting-templates/{template}/upload-image', [AdminGreetingTemplateController::class, 'uploadImage'])->name('greeting-templates.upload-image');
+
+    Route::get('greeting-cards', [AdminGreetingTemplateController::class, 'cardsIndex'])->name('greeting-cards.index');
+    Route::post('greeting-cards/{card}/status', [AdminGreetingTemplateController::class, 'updateCardStatus'])->name('greeting-cards.status');
+    Route::delete('greeting-cards/{card}', [AdminGreetingTemplateController::class, 'destroyCard'])->name('greeting-cards.destroy');
 
     // Audit logs
     Route::get('audit-logs', [AdminAuditLogController::class, 'index'])->name('audit-logs.index');

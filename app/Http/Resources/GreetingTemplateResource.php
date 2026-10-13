@@ -18,9 +18,11 @@ class GreetingTemplateResource extends JsonResource
             'slug' => $this->slug,
             'occasion' => $this->occasion,
             'description' => $this->description,
-            'thumbnail_path' => $this->thumbnail_path,
+            'thumbnail_path' => $this->thumbnail_url ?? $this->thumbnail_path,
+            'thumbnail_url' => $this->thumbnail_url,
             'design_config' => $this->design_config,
             'sort_order' => $this->sort_order,
+            'is_active' => (bool) $this->is_active,
         ];
     }
 }

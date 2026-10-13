@@ -175,7 +175,12 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::post('photos/batch', [AdminPhotoApiController::class, 'batchAction'])->name('photos.batch');
             Route::delete('photos/{photo}', [AdminPhotoApiController::class, 'destroy'])->name('photos.destroy');
 
-            // Greeting cards moderation
+            // Greeting cards & templates moderation
+            Route::get('greeting-templates', [AdminGreetingCardApiController::class, 'templates'])->name('greeting-templates.index');
+            Route::post('greeting-templates', [AdminGreetingCardApiController::class, 'storeTemplate'])->name('greeting-templates.store');
+            Route::post('greeting-templates/{template}', [AdminGreetingCardApiController::class, 'updateTemplate'])->name('greeting-templates.update');
+            Route::delete('greeting-templates/{template}', [AdminGreetingCardApiController::class, 'destroyTemplate'])->name('greeting-templates.destroy');
+
             Route::get('greeting-cards', [AdminGreetingCardApiController::class, 'index'])->name('greeting-cards.index');
             Route::patch('greeting-cards/{card}/status', [AdminGreetingCardApiController::class, 'updateStatus'])->name('greeting-cards.status');
             Route::get('greeting-reports', [AdminGreetingCardApiController::class, 'reports'])->name('greeting-reports.index');
