@@ -37,6 +37,11 @@ class DiscoveryController extends Controller
             'min_verification_level' => ['sometimes', 'integer', 'between:0,4'],
             'has_photo' => ['sometimes', 'boolean'],
             'active_within_days' => ['sometimes', 'integer'],
+            // "Near me": the viewer's current location + radius (km). All three together.
+            // (No `sometimes` — it would skip `required_with` when the field is absent.)
+            'lat' => ['nullable', 'numeric', 'between:-90,90', 'required_with:lng,radius_km'],
+            'lng' => ['nullable', 'numeric', 'between:-180,180', 'required_with:lat,radius_km'],
+            'radius_km' => ['nullable', 'numeric', 'in:1,2,5', 'required_with:lat,lng'],
             'sort' => ['sometimes', 'in:recent,newest,verification,relevant'],
         ]);
 

@@ -44,6 +44,11 @@ class ProfileResource extends JsonResource
 
             'district' => $this->whenLoaded('district', fn () => $this->district?->only(['id', 'name_en', 'name_bn'])),
             'upazila' => $this->whenLoaded('upazila', fn () => $this->upazila?->only(['id', 'name_en', 'name_bn'])),
+
+            // Precise coordinates for radius ("near me") discovery. Exposed only to
+            // the owner so it can prefill their edit form — never to other viewers.
+            'latitude' => $this->when($isOwner, fn () => $this->latitude !== null ? (float) $this->latitude : null),
+            'longitude' => $this->when($isOwner, fn () => $this->longitude !== null ? (float) $this->longitude : null),
             'religion' => $this->whenLoaded('religion', fn () => $this->religion?->only(['id', 'key', 'name_en'])),
             'profession' => $this->whenLoaded('profession', fn () => $this->profession?->only(['id', 'key', 'name_en'])),
             'education_level' => $this->whenLoaded('educationLevel', fn () => $this->educationLevel?->only(['id', 'key', 'name_en'])),

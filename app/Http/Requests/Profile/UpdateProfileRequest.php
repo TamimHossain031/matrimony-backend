@@ -24,6 +24,10 @@ class UpdateProfileRequest extends FormRequest
             'marital_status' => ['nullable', Rule::in(['never_married', 'divorced', 'widowed', 'separated'])],
             'district_id' => ['nullable', 'exists:locations,id'],
             'upazila_id' => ['nullable', 'exists:locations,id'],
+
+            // Precise coordinates for radius discovery; both set together or neither.
+            'latitude' => ['nullable', 'numeric', 'between:-90,90', 'required_with:longitude'],
+            'longitude' => ['nullable', 'numeric', 'between:-180,180', 'required_with:latitude'],
             'nationality' => ['nullable', 'string', 'max:100'],
             'headline' => ['nullable', 'string', 'max:255'],
             'about' => ['nullable', 'string', 'max:5000'],

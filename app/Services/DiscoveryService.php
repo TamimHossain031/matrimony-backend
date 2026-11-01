@@ -160,6 +160,52 @@ class DiscoveryService
             $cutoff = now()->subDays((int) $filters['active_within_days']);
             $query->whereHas('user', fn ($q) => $q->where('last_active_at', '>=', $cutoff));
         }
+
+        $this->applyRadius($query, $filters);
+    }
+
+    /**
+     * "Near me": keep only profiles within `radius_km` of (lat, lng).
+     *
+     * A bounding-box pre-filter uses the (latitude, longitude) index to narrow
+     * the set, then ST_Distance_Sphere does the exact great-circle check in
+     * meters. Profiles without coordinates are never matched.
+     *
+     * @param  array<string,mixed>  $filters
+     */
+    protected function applyRadius(Builder $query, array $filters): void
+    {
+        if (empty($filters['lat']) || empty($filters['lng']) || empty($filters['radius_km'])) {
+            return;
+        }
+
+        $lat = (float) $filters['lat'];
+        $lng = (float) $filters['lng'];
+        $meters = (float) $filters['radius_km'] * 1000;
+
+        $latDelta = $meters / 111_320;
+        $lngDelta = $meters / (111_320 * max(cos(deg2rad($lat)), 0.01));
+
+        $query->whereNotNull('latitude')
+            ->whereNotNull('longitude')
+            ->whereBetween('latitude', [$lat - $latDelta, $lat + $latDelta])
+            ->whereBetween('longitude', [$lng - $lngDelta, $lng + $lngDelta]);
+
+        // Exact great-circle check. MySQL has a native helper; other drivers
+        // (SQLite in tests) use the spherical law of cosines with math functions.
+        if ($query->getConnection()->getDriverName() === 'mysql') {
+            $query->whereRaw(
+                'ST_Distance_Sphere(POINT(longitude, latitude), POINT(?, ?)) <= ?',
+                [$lng, $lat, $meters],
+            );
+        } else {
+            $query->whereRaw(
+                '6371000 * acos(min(1.0, '
+                .'cos(radians(?)) * cos(radians(latitude)) * cos(radians(longitude) - radians(?)) '
+                .'+ sin(radians(?)) * sin(radians(latitude)))) <= ?',
+                [$lat, $lng, $lat, $meters],
+            );
+        }
     }
 
     protected function applySorting(Builder $query, string $sort): void

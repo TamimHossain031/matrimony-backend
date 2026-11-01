@@ -37,4 +37,13 @@ class ProfileFactory extends Factory
             'date_of_birth' => $user->date_of_birth,
         ]);
     }
+
+    /** Place the profile at explicit coordinates (for "near me" discovery). */
+    public function atLocation(float $latitude, float $longitude): static
+    {
+        return $this->state(fn () => [
+            'latitude' => $latitude,
+            'longitude' => $longitude,
+        ]);
+    }
 }

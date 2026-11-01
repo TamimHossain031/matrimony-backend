@@ -24,7 +24,7 @@ class Profile extends Model
     protected $fillable = [
         'user_id', 'public_id',
         'full_name_en', 'full_name_bn', 'gender', 'date_of_birth', 'height_cm',
-        'marital_status', 'district_id', 'upazila_id', 'nationality',
+        'marital_status', 'district_id', 'upazila_id', 'latitude', 'longitude', 'nationality',
         'headline', 'about', 'religion_id',
         'education_level_id', 'institution', 'subject', 'graduation_year',
         'profession_id', 'job_title', 'organization', 'income_min', 'income_max', 'work_location',
@@ -39,6 +39,8 @@ class Profile extends Model
             'gender' => Gender::class,
             'lifestyle' => 'array',
             'has_photo' => 'boolean',
+            'latitude' => 'decimal:7',
+            'longitude' => 'decimal:7',
         ];
     }
 
